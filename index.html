@@ -14,7 +14,7 @@
         </div>
 
         <!-- In-Game Floating HUD -->
-        <div id="hudContainer" class="screen-overlay hidden" style="background: transparent; pointer-events: none;">
+        <div id="hudContainer" class="hidden">
             <div class="hud-panel">
                 <div id="hudHearts"></div>
                 <div id="hudCoins" class="hud-stat">💧 0</div>
@@ -22,12 +22,12 @@
             <div id="hudCombo"></div>
             <div class="hud-panel">
                 <div id="hudScore" class="hud-stat">Score: 0</div>
-                <button class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.85rem;" onclick="window.game.togglePause()">⏸️ Pause</button>
+                <button class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.85rem; pointer-events: auto;" onclick="window.game.togglePause()">⏸️ Pause</button>
             </div>
         </div>
 
         <!-- Mobile Touch Controls Overlay -->
-        <div id="touchControls" class="screen-overlay hidden" style="background: transparent; pointer-events: none;">
+        <div id="touchControls" class="hidden">
             <div class="touch-cluster">
                 <div id="btnTouchLeft" class="touch-btn">◀</div>
                 <div id="btnTouchRight" class="touch-btn">▶</div>

@@ -23,9 +23,14 @@ class GameEngine {
         this.trajectory = new TrajectoryProjector();
         this.editor = new LevelEditor(this.canvas, this.ctx);
 
-        // Entities
+        // Entities & Level Setup
         this.player = new Player(100, 350);
         this.camera = { x: 0, y: 0, shake: 0 };
+
+        // Initialize Level 1 by default so the world is immediately active
+        const initialLevelData = LevelManager.getAdventureLevel(1);
+        this.activeLevel = LevelManager.parseLevelData(initialLevelData);
+        this.player.reset(this.activeLevel.spawn.x, this.activeLevel.spawn.y);
 
         // Endless mode tracking
         this.endlessChunkIndex = 0;
@@ -184,17 +189,21 @@ class GameEngine {
         const levelData = LevelManager.getAdventureLevel(levelNum);
         this.activeLevel = LevelManager.parseLevelData(levelData);
 
-        this.player.skin = window.shop.selectedSkin;
-        this.player.umbrellaSkin = window.shop.selectedUmbrella;
-        this.player.trailEffect = window.shop.selectedTrail;
-        this.player.maxHealth = 3 + (window.shop.upgrades.maxHealth || 0);
+        if (window.shop) {
+            this.player.skin = window.shop.selectedSkin || 'froggy';
+            this.player.umbrellaSkin = window.shop.selectedUmbrella || 'standard';
+            this.player.trailEffect = window.shop.selectedTrail || 'none';
+            this.player.maxHealth = 3 + (window.shop.upgrades?.maxHealth || 0);
+        }
         this.player.reset(this.activeLevel.spawn.x, this.activeLevel.spawn.y);
 
         this.camera.x = 0;
         this.camera.y = 0;
 
-        window.sound.setWeatherIntensity(this.activeLevel.biome.weather.intensity, this.activeLevel.biome.weather.wind);
-        window.sound.startMusic();
+        if (window.sound && this.activeLevel.biome?.weather) {
+            window.sound.setWeatherIntensity(this.activeLevel.biome.weather.intensity, this.activeLevel.biome.weather.wind);
+            window.sound.startMusic();
+        }
         this.updateHUD();
         this.showScreen('hudContainer');
     }
@@ -220,14 +229,18 @@ class GameEngine {
         };
         this.endlessNextX = firstChunk.nextStartX;
 
-        this.player.skin = window.shop.selectedSkin;
-        this.player.umbrellaSkin = window.shop.selectedUmbrella;
-        this.player.trailEffect = window.shop.selectedTrail;
-        this.player.maxHealth = 3 + (window.shop.upgrades.maxHealth || 0);
+        if (window.shop) {
+            this.player.skin = window.shop.selectedSkin || 'froggy';
+            this.player.umbrellaSkin = window.shop.selectedUmbrella || 'standard';
+            this.player.trailEffect = window.shop.selectedTrail || 'none';
+            this.player.maxHealth = 3 + (window.shop.upgrades?.maxHealth || 0);
+        }
         this.player.reset(100, 400);
 
-        window.sound.setWeatherIntensity(0.5, 0.4);
-        window.sound.startMusic();
+        if (window.sound) {
+            window.sound.setWeatherIntensity(0.5, 0.4);
+            window.sound.startMusic();
+        }
         this.updateHUD();
         this.showScreen('hudContainer');
     }
@@ -237,12 +250,13 @@ class GameEngine {
             window.sound.init();
             window.sound.resume();
         }
-        this.state = 'ZEN';
         this.startEndlessMode();
         this.state = 'ZEN'; // Override state back to ZEN
         this.player.health = 999;
-        window.sound.setWeatherIntensity(0.3, 0.1);
-        window.sound.startMusic();
+        if (window.sound) {
+            window.sound.setWeatherIntensity(0.3, 0.1);
+            window.sound.startMusic();
+        }
         this.showScreen('hudContainer');
     }
 
@@ -251,7 +265,6 @@ class GameEngine {
             window.sound.init();
             window.sound.resume();
         }
-        this.state = 'TIME_ATTACK';
         this.timeAttackTimer = 0;
         this.startAdventureMode(3); // Fast paced stage 3
         this.state = 'TIME_ATTACK';
@@ -300,6 +313,19 @@ class GameEngine {
         if (this.state === 'EDITOR') {
             return;
         }
+
+        if (this.state === 'MENU') {
+            if (this.activeLevel) {
+                const wind = this.activeLevel.biome ? this.activeLevel.biome.weather.wind : 0.2;
+                this.particleSys.update(this.viewWidth, this.viewHeight, wind);
+                for (const puddle of this.activeLevel.puddles) {
+                    puddle.update();
+                }
+            }
+            return;
+        }
+
+        if (!this.activeLevel) return;
 
         if (['ADVENTURE', 'ENDLESS', 'TIME_ATTACK', 'ZEN', 'EDITOR_PLAY'].includes(this.state)) {
             // Handle Horizontal Controls
@@ -528,6 +554,11 @@ class GameEngine {
         // Background Rain Layer
         this.particleSys.draw(ctx, this.camera, 'background');
 
+        if (!this.activeLevel) {
+            ctx.restore();
+            return;
+        }
+
         // Draw Platforms
         ctx.fillStyle = biome.groundColor;
         for (const plat of this.activeLevel.platforms) {
@@ -619,12 +650,15 @@ class GameEngine {
         this.lastTime = timestamp;
 
         this.accumulator += delta;
-        while (this.accumulator >= this.fixedDelta) {
-            this.update();
-            this.accumulator -= this.fixedDelta;
+        try {
+            while (this.accumulator >= this.fixedDelta) {
+                this.update();
+                this.accumulator -= this.fixedDelta;
+            }
+            this.draw();
+        } catch (err) {
+            console.error("Game loop error:", err);
         }
-
-        this.draw();
         requestAnimationFrame((t) => this.loop(t));
     }
 }
