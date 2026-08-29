@@ -518,6 +518,84 @@ class Player {
                 }
                 break;
 
+            case 'axolotl':
+                // Pink Axolotl with glowing gills
+                ctx.fillStyle = '#f472b6';
+                ctx.beginPath();
+                ctx.ellipse(0, 2, w * 0.44, h * 0.38, 0, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Axolotl External Gills
+                ctx.fillStyle = '#fb7185';
+                for (let g = -1; g <= 1; g++) {
+                    ctx.beginPath();
+                    ctx.ellipse(-w * 0.45, g * 8, 8, 4, -0.3, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.beginPath();
+                    ctx.ellipse(w * 0.45, g * 8, 8, 4, 0.3, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+
+                // Eyes
+                if (!this.isBlinking) {
+                    ctx.fillStyle = '#0f172a';
+                    ctx.beginPath();
+                    ctx.arc(-w * 0.18, -2, 3.5, 0, Math.PI * 2);
+                    ctx.arc(w * 0.18, -2, 3.5, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                // Cute mouth
+                ctx.strokeStyle = '#e11d48';
+                ctx.lineWidth = 1.5;
+                ctx.beginPath();
+                ctx.arc(0, 4, 5, 0.2, Math.PI - 0.2);
+                ctx.stroke();
+                break;
+
+            case 'cyber_rover':
+                // Neon Cyber Rover Bot
+                ctx.fillStyle = '#0ea5e9';
+                ctx.beginPath();
+                ctx.roundRect(-w * 0.38, -h * 0.35, w * 0.76, h * 0.7, 8);
+                ctx.fill();
+
+                // Cyber Visor
+                ctx.fillStyle = '#38bdf8';
+                ctx.beginPath();
+                ctx.roundRect(-w * 0.28, -h * 0.15, w * 0.56, 12, 4);
+                ctx.fill();
+
+                // Glowing Antenna
+                ctx.strokeStyle = '#0284c7';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(0, -h * 0.35);
+                ctx.lineTo(0, -h * 0.55);
+                ctx.stroke();
+                ctx.fillStyle = '#22d3ee';
+                ctx.beginPath();
+                ctx.arc(0, -h * 0.55, 4, 0, Math.PI * 2);
+                ctx.fill();
+                break;
+
+            case 'storm_mage':
+                // Mystic Storm Mage Hood
+                ctx.fillStyle = '#7c3aed';
+                ctx.beginPath();
+                ctx.moveTo(0, -h * 0.65);
+                ctx.lineTo(-w * 0.45, h * 0.35);
+                ctx.lineTo(w * 0.45, h * 0.35);
+                ctx.closePath();
+                ctx.fill();
+
+                // Glowing Magic Eyes
+                ctx.fillStyle = '#c084fc';
+                ctx.beginPath();
+                ctx.arc(-6, -2, 3, 0, Math.PI * 2);
+                ctx.arc(6, -2, 3, 0, Math.PI * 2);
+                ctx.fill();
+                break;
+
             case 'froggy':
             default:
                 // Emerald Green Froggy

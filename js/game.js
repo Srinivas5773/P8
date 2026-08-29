@@ -54,14 +54,15 @@ class GameEngine {
     resize() {
         const container = document.getElementById('canvasContainer');
         const dpr = window.devicePixelRatio || 1;
-        const width = container ? container.clientWidth : 960;
-        const height = container ? container.clientHeight : 540;
+        const width = container && container.clientWidth ? container.clientWidth : 960;
+        const height = container && container.clientHeight ? container.clientHeight : 540;
 
         this.canvas.width = width * dpr;
         this.canvas.height = height * dpr;
         this.canvas.style.width = width + 'px';
         this.canvas.style.height = height + 'px';
 
+        this.ctx.setTransform(1, 0, 0, 1, 0, 0);
         this.ctx.scale(dpr, dpr);
         this.viewWidth = width;
         this.viewHeight = height;
@@ -90,10 +91,18 @@ class GameEngine {
 
         // Mouse / Touch aiming on canvas
         this.canvas.addEventListener('mousedown', (e) => {
+            if (window.sound) {
+                window.sound.init();
+                window.sound.resume();
+            }
             if (this.state === 'EDITOR') {
                 this.editor.handleMouseDown(e);
-            } else if (this.state === 'ADVENTURE' || this.state === 'ENDLESS' || this.state === 'ZEN' || this.state === 'TIME_ATTACK' || this.state === 'EDITOR_PLAY') {
+            } else if (['ADVENTURE', 'ENDLESS', 'ZEN', 'TIME_ATTACK', 'EDITOR_PLAY'].includes(this.state)) {
                 if (e.button === 0) {
+                    const rect = this.canvas.getBoundingClientRect();
+                    const mouseX = e.clientX - rect.left;
+                    const worldX = mouseX + this.camera.x;
+                    this.player.facing = worldX >= this.player.x + this.player.width / 2 ? 1 : -1;
                     this.player.startCharge();
                 }
             }
@@ -108,8 +117,8 @@ class GameEngine {
         this.canvas.addEventListener('mouseup', (e) => {
             if (this.state === 'EDITOR') {
                 this.editor.handleMouseUp(e);
-            } else if (this.state === 'ADVENTURE' || this.state === 'ENDLESS' || this.state === 'ZEN' || this.state === 'TIME_ATTACK' || this.state === 'EDITOR_PLAY') {
-                if (e.button === 0) {
+            } else if (['ADVENTURE', 'ENDLESS', 'ZEN', 'TIME_ATTACK', 'EDITOR_PLAY'].includes(this.state)) {
+                if (e.button === 0 && this.player.isCharging) {
                     this.player.releaseJump(this.particleSys);
                 }
             }
@@ -166,6 +175,10 @@ class GameEngine {
     }
 
     startAdventureMode(levelNum = 1) {
+        if (window.sound) {
+            window.sound.init();
+            window.sound.resume();
+        }
         this.currentLevelNum = levelNum;
         this.state = 'ADVENTURE';
         const levelData = LevelManager.getAdventureLevel(levelNum);
@@ -183,10 +196,14 @@ class GameEngine {
         window.sound.setWeatherIntensity(this.activeLevel.biome.weather.intensity, this.activeLevel.biome.weather.wind);
         window.sound.startMusic();
         this.updateHUD();
-        this.showScreen('gameHUD');
+        this.showScreen('hudContainer');
     }
 
     startEndlessMode() {
+        if (window.sound) {
+            window.sound.init();
+            window.sound.resume();
+        }
         this.state = 'ENDLESS';
         this.endlessChunkIndex = 0;
         this.endlessDistance = 0;
@@ -212,23 +229,33 @@ class GameEngine {
         window.sound.setWeatherIntensity(0.5, 0.4);
         window.sound.startMusic();
         this.updateHUD();
-        this.showScreen('gameHUD');
+        this.showScreen('hudContainer');
     }
 
     startZenMode() {
+        if (window.sound) {
+            window.sound.init();
+            window.sound.resume();
+        }
         this.state = 'ZEN';
         this.startEndlessMode();
         this.state = 'ZEN'; // Override state back to ZEN
         this.player.health = 999;
         window.sound.setWeatherIntensity(0.3, 0.1);
         window.sound.startMusic();
+        this.showScreen('hudContainer');
     }
 
     startTimeAttackMode() {
+        if (window.sound) {
+            window.sound.init();
+            window.sound.resume();
+        }
         this.state = 'TIME_ATTACK';
         this.timeAttackTimer = 0;
         this.startAdventureMode(3); // Fast paced stage 3
         this.state = 'TIME_ATTACK';
+        this.showScreen('hudContainer');
     }
 
     startEditor() {
@@ -242,7 +269,7 @@ class GameEngine {
         this.state = 'EDITOR_PLAY';
         this.activeLevel = this.editor.getPlayableLevel();
         this.player.reset(this.activeLevel.spawn.x, this.activeLevel.spawn.y);
-        this.showScreen('gameHUD');
+        this.showScreen('hudContainer');
     }
 
     addFloatingText(text, x, y, color = '#60a5fa') {
@@ -457,9 +484,25 @@ class GameEngine {
     }
 
     showScreen(screenId) {
-        document.querySelectorAll('.screen-overlay').forEach(el => el.classList.add('hidden'));
-        const target = document.getElementById(screenId);
-        if (target) target.classList.remove('hidden');
+        document.querySelectorAll('.screen-overlay').forEach(el => {
+            if (el.id !== 'hudContainer' && el.id !== 'touchControls') {
+                el.classList.add('hidden');
+            }
+        });
+
+        if (screenId === 'hudContainer' || screenId === 'gameHUD') {
+            const hud = document.getElementById('hudContainer');
+            if (hud) hud.classList.remove('hidden');
+            const touch = document.getElementById('touchControls');
+            if (touch) touch.classList.remove('hidden');
+        } else {
+            const target = document.getElementById(screenId);
+            if (target) target.classList.remove('hidden');
+            const hud = document.getElementById('hudContainer');
+            if (hud) hud.classList.add('hidden');
+            const touch = document.getElementById('touchControls');
+            if (touch) touch.classList.add('hidden');
+        }
     }
 
     draw() {

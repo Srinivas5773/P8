@@ -46,7 +46,10 @@
                 <p class="subtitle">Splash, Bounce & Glide through Rainy Worlds</p>
                 <div class="btn-group">
                     <button class="btn btn-primary" onclick="window.game.startAdventureMode(1)">
-                        <span class="btn-icon">🗺️</span> Adventure Mode
+                        <span class="btn-icon">▶️</span> Start Adventure (Stage 1)
+                    </button>
+                    <button class="btn" onclick="openModal('levelSelectModal')">
+                        <span class="btn-icon">🗺️</span> Select Stage (1 - 50)
                     </button>
                     <button class="btn" onclick="window.game.startEndlessMode()">
                         <span class="btn-icon">⚡</span> Endless Storm
@@ -206,7 +209,26 @@
         function openModal(id) {
             if (id === 'shopModal') renderShopUI();
             if (id === 'achievementsModal') renderAchievementsUI();
+            if (id === 'levelSelectModal') renderLevelSelectUI();
             document.getElementById(id).classList.remove('hidden');
+        }
+
+        function renderLevelSelectUI() {
+            const grid = document.getElementById('levelGrid');
+            if (!grid) return;
+            let html = '';
+            for (let i = 1; i <= 50; i++) {
+                const isBoss = i % 10 === 0;
+                const biomeIndex = Math.floor((i - 1) / 10);
+                const biomeNames = ['Sunny', 'Muddy', 'Cyber', 'Marsh', 'Storm'];
+                html += `
+                    <button class="btn ${isBoss ? 'btn-danger' : 'btn-secondary'}" style="padding: 10px 4px; font-size: 0.85rem; display: flex; flex-direction: column; gap: 2px;" onclick="closeModal('levelSelectModal'); window.game.startAdventureMode(${i});">
+                        <span>${isBoss ? '👑 Boss ' + (biomeIndex + 1) : 'Lv ' + i}</span>
+                        <span style="font-size: 0.7rem; color: var(--text-muted);">${biomeNames[biomeIndex]}</span>
+                    </button>
+                `;
+            }
+            grid.innerHTML = html;
         }
 
         function closeModal(id) {
