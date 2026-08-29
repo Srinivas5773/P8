@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Puddle Jumper - Ultimate Rainy Arcade Game</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div id="gameApp">
+        <!-- Main Canvas Viewport -->
+        <div id="canvasContainer">
+            <canvas id="gameCanvas"></canvas>
+        </div>
+
+        <!-- In-Game Floating HUD -->
+        <div id="hudContainer" class="screen-overlay hidden" style="background: transparent; pointer-events: none;">
+            <div class="hud-panel">
+                <div id="hudHearts"></div>
+                <div id="hudCoins" class="hud-stat">💧 0</div>
+            </div>
+            <div id="hudCombo"></div>
+            <div class="hud-panel">
+                <div id="hudScore" class="hud-stat">Score: 0</div>
+                <button class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.85rem;" onclick="window.game.togglePause()">⏸️ Pause</button>
+            </div>
+        </div>
+
+        <!-- Mobile Touch Controls Overlay -->
+        <div id="touchControls" class="screen-overlay hidden" style="background: transparent; pointer-events: none;">
+            <div class="touch-cluster">
+                <div id="btnTouchLeft" class="touch-btn">◀</div>
+                <div id="btnTouchRight" class="touch-btn">▶</div>
+            </div>
+            <div class="touch-cluster">
+                <div id="btnTouchGlide" class="touch-btn">☂️</div>
+                <div id="btnTouchStomp" class="touch-btn">⬇️</div>
+                <div id="btnTouchJump" class="touch-btn touch-btn-action">⬆️</div>
+            </div>
+        </div>
+
+        <!-- Main Menu Overlay -->
+        <div id="mainMenu" class="screen-overlay">
+            <div class="glass-card">
+                <h1 class="game-title">PUDDLE JUMPER</h1>
+                <p class="subtitle">Splash, Bounce & Glide through Rainy Worlds</p>
+                <div class="btn-group">
+                    <button class="btn btn-primary" onclick="window.game.startAdventureMode(1)">
+                        <span class="btn-icon">🗺️</span> Adventure Mode
+                    </button>
+                    <button class="btn" onclick="window.game.startEndlessMode()">
+                        <span class="btn-icon">⚡</span> Endless Storm
+                    </button>
+                    <button class="btn" onclick="window.game.startTimeAttackMode()">
+                        <span class="btn-icon">⏱️</span> Time Attack
+                    </button>
+                    <button class="btn" onclick="window.game.startZenMode()">
+                        <span class="btn-icon">🌧️</span> Zen Rain Mode
+                    </button>
+                    <button class="btn" onclick="window.game.startEditor()">
+                        <span class="btn-icon">🛠️</span> Level Editor
+                    </button>
+                    <div style="display: flex; gap: 8px; margin-top: 10px;">
+                        <button class="btn btn-secondary" style="flex: 1;" onclick="openModal('shopModal')">🛍️ Shop</button>
+                        <button class="btn btn-secondary" style="flex: 1;" onclick="openModal('achievementsModal')">🏆 Badges</button>
+                        <button class="btn btn-secondary" style="flex: 1;" onclick="openModal('settingsModal')">⚙️ Options</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Level Selector Modal -->
+        <div id="levelSelectModal" class="screen-overlay hidden">
+            <div class="glass-card" style="max-width: 650px;">
+                <h2>Select Adventure Stage</h2>
+                <div id="levelGrid" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin: 20px 0; max-height: 320px; overflow-y: auto;">
+                    <!-- Injected dynamically -->
+                </div>
+                <button class="btn btn-secondary" onclick="closeModal('levelSelectModal')">Back to Menu</button>
+            </div>
+        </div>
+
+        <!-- Shop / Wardrobe Modal -->
+        <div id="shopModal" class="screen-overlay hidden">
+            <div class="glass-card" style="max-width: 700px; width: 90%;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <h2>Wardrobe & Shop</h2>
+                    <div id="shopCoinDisplay" style="font-weight: 800; font-size: 1.2rem; color: var(--gold);">💧 0</div>
+                </div>
+                <div class="shop-grid" id="shopCatalogGrid">
+                    <!-- Populated dynamically -->
+                </div>
+                <button class="btn btn-secondary" style="margin-top: 16px;" onclick="closeModal('shopModal')">Close</button>
+            </div>
+        </div>
+
+        <!-- Achievements Modal -->
+        <div id="achievementsModal" class="screen-overlay hidden">
+            <div class="glass-card" style="max-width: 600px; width: 90%;">
+                <h2>Achievements & Statistics</h2>
+                <div class="achievements-list" id="achievementsList">
+                    <!-- Injected dynamically -->
+                </div>
+                <button class="btn btn-secondary" style="margin-top: 16px;" onclick="closeModal('achievementsModal')">Close</button>
+            </div>
+        </div>
+
+        <!-- Settings Modal -->
+        <div id="settingsModal" class="screen-overlay hidden">
+            <div class="glass-card" style="max-width: 480px; width: 90%;">
+                <h2>Audio & Game Settings</h2>
+                <div style="display: flex; flex-direction: column; gap: 16px; margin: 24px 0; text-align: left;">
+                    <div>
+                        <label>SFX Volume</label>
+                        <input type="range" min="0" max="1" step="0.05" value="0.8" style="width: 100%;" oninput="window.sound.setSFXVolume(this.value)">
+                    </div>
+                    <div>
+                        <label>Generative Music Volume</label>
+                        <input type="range" min="0" max="1" step="0.05" value="0.4" style="width: 100%;" oninput="window.sound.setMusicVolume(this.value)">
+                    </div>
+                    <div>
+                        <label>Ambient Rain Volume</label>
+                        <input type="range" min="0" max="1" step="0.05" value="0.5" style="width: 100%;" oninput="window.sound.setAmbientVolume(this.value)">
+                    </div>
+                </div>
+                <button class="btn btn-secondary" onclick="closeModal('settingsModal')">Back</button>
+            </div>
+        </div>
+
+        <!-- Level Editor UI Overlay -->
+        <div id="editorUI" class="screen-overlay hidden" style="background: transparent; pointer-events: none;">
+            <div id="editorToolbar">
+                <button class="tool-btn active" onclick="setEditorTool(this, 'platform')">Platform</button>
+                <button class="tool-btn" onclick="setEditorTool(this, 'water_puddle')">Water</button>
+                <button class="tool-btn" onclick="setEditorTool(this, 'spring_puddle')">Spring</button>
+                <button class="tool-btn" onclick="setEditorTool(this, 'mud_puddle')">Mud</button>
+                <button class="tool-btn" onclick="setEditorTool(this, 'ice_puddle')">Ice</button>
+                <button class="tool-btn" onclick="setEditorTool(this, 'bubble_puddle')">Bubble</button>
+                <button class="tool-btn" onclick="setEditorTool(this, 'coin')">Coin</button>
+                <button class="tool-btn" onclick="setEditorTool(this, 'snail')">Snail</button>
+                <button class="tool-btn" onclick="setEditorTool(this, 'eraser')">Eraser</button>
+                <button class="tool-btn btn-primary" onclick="window.game.playCustomLevel()">▶ Test Play</button>
+                <button class="tool-btn" onclick="returnToMainMenu()">Exit</button>
+            </div>
+        </div>
+
+        <!-- Pause Modal -->
+        <div id="pauseModal" class="screen-overlay hidden">
+            <div class="glass-card">
+                <h2>Game Paused</h2>
+                <div class="btn-group" style="margin-top: 20px;">
+                    <button class="btn btn-primary" onclick="window.game.togglePause()">Resume</button>
+                    <button class="btn btn-secondary" onclick="returnToMainMenu()">Main Menu</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Game Over Modal -->
+        <div id="gameOverModal" class="screen-overlay hidden">
+            <div class="glass-card">
+                <h2 style="color: var(--danger);">Splash Out!</h2>
+                <p id="finalScoreText" class="subtitle" style="margin: 14px 0;">Final Score: 0</p>
+                <div class="btn-group">
+                    <button class="btn btn-primary" onclick="retryGame()">Try Again</button>
+                    <button class="btn btn-secondary" onclick="returnToMainMenu()">Main Menu</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Victory Modal -->
+        <div id="victoryModal" class="screen-overlay hidden">
+            <div class="glass-card">
+                <h2 style="color: var(--gold);">Stage Cleared! 🎉</h2>
+                <p id="victoryScore" class="subtitle" style="margin: 14px 0;">Score: 0</p>
+                <div class="btn-group">
+                    <button class="btn btn-primary" onclick="nextStage()">Next Stage</button>
+                    <button class="btn btn-secondary" onclick="returnToMainMenu()">Main Menu</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Achievement Toast Alert -->
+        <div id="achievementToast"></div>
+    </div>
+
+    <!-- Expansion Data Packs & Encyclopedias -->
+    <script src="js/data/campaign_levels_pack_1.js"></script>
+    <script src="js/data/campaign_levels_pack_2.js"></script>
+    <script src="js/data/campaign_levels_pack_3.js"></script>
+    <script src="js/data/campaign_levels_pack_4.js"></script>
+    <script src="js/data/bestiary_and_lore.js"></script>
+    <script src="js/data/sound_presets.js"></script>
+
+    <!-- Core Scripts Loading -->
+    <script src="js/audio.js"></script>
+    <script src="js/physics.js"></script>
+    <script src="js/entities.js"></script>
+    <script src="js/levels.js"></script>
+    <script src="js/shop.js"></script>
+    <script src="js/achievements.js"></script>
+    <script src="js/editor.js"></script>
+    <script src="js/game.js"></script>
+
+    <script>
+        // Modal helpers
+        function openModal(id) {
+            if (id === 'shopModal') renderShopUI();
+            if (id === 'achievementsModal') renderAchievementsUI();
+            document.getElementById(id).classList.remove('hidden');
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.add('hidden');
+        }
+
+        function returnToMainMenu() {
+            document.querySelectorAll('.screen-overlay').forEach(el => el.classList.add('hidden'));
+            document.getElementById('mainMenu').classList.remove('hidden');
+            window.game.state = 'MENU';
+            window.sound.stopMusic();
+        }
+
+        function retryGame() {
+            document.getElementById('gameOverModal').classList.add('hidden');
+            if (window.game.state === 'ENDLESS') window.game.startEndlessMode();
+            else window.game.startAdventureMode(window.game.currentLevelNum);
+        }
+
+        function nextStage() {
+            document.getElementById('victoryModal').classList.add('hidden');
+            window.game.startAdventureMode(window.game.currentLevelNum + 1);
+        }
+
+        function setEditorTool(btn, tool) {
+            document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            window.game.editor.selectedTool = tool;
+        }
+
+        function renderShopUI() {
+            const grid = document.getElementById('shopCatalogGrid');
+            const coins = document.getElementById('shopCoinDisplay');
+            if (coins) coins.innerText = `💧 ${window.shop.coins}`;
+            if (!grid) return;
+
+            let html = '';
+            for (const item of window.shop.skinCatalog) {
+                const isUnlocked = window.shop.unlockedSkins.includes(item.id);
+                const isEquipped = window.shop.selectedSkin === item.id;
+
+                html += `
+                    <div class="shop-card ${isEquipped ? 'equipped' : ''}" onclick="onShopClick('${item.id}')">
+                        <div class="shop-card-icon">🐸</div>
+                        <div class="shop-card-title">${item.name}</div>
+                        <div class="shop-card-price">${isEquipped ? 'EQUIPPED' : (isUnlocked ? 'EQUIP' : `💧 ${item.price}`)}</div>
+                    </div>
+                `;
+            }
+            grid.innerHTML = html;
+        }
+
+        function onShopClick(skinId) {
+            if (window.shop.unlockedSkins.includes(skinId)) {
+                window.shop.equipSkin(skinId);
+            } else {
+                window.shop.buySkin(skinId);
+            }
+            renderShopUI();
+        }
+
+        function renderAchievementsUI() {
+            const list = document.getElementById('achievementsList');
+            if (!list) return;
+
+            let html = '';
+            for (const ach of window.achievements.achievements) {
+                html += `
+                    <div class="ach-item ${ach.unlocked ? '' : 'locked'}">
+                        <div class="ach-icon">${ach.icon}</div>
+                        <div class="ach-info">
+                            <h4>${ach.title}</h4>
+                            <p>${ach.desc}</p>
+                        </div>
+                    </div>
+                `;
+            }
+            list.innerHTML = html;
+        }
+    </script>
+</body>
+</html>

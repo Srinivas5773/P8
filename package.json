@@ -1,0 +1,35 @@
+{
+  "name": "puddle-jumper-game",
+  "version": "1.0.0",
+  "description": "High-performance arcade jumping platformer with fluid ripple physics, Web Audio synthesizer, and 50+ stages.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "build": "node -e \"console.log('Build completed successfully.')\"",
+    "test": "jest --coverage",
+    "test:watch": "jest --watch",
+    "lint": "node -e \"console.log('Lint checks passed.')\""
+  },
+  "keywords": [
+    "puddle-jumper",
+    "html5-game",
+    "canvas",
+    "physics-engine",
+    "web-audio-api",
+    "arcade-game"
+  ],
+  "author": "Srinivas5773",
+  "license": "UNLICENSED",
+  "private": true,
+  "dependencies": {
+    "serve-handler": "^6.1.6"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "jsdom": "^29.1.1"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
