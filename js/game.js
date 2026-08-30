@@ -21,6 +21,7 @@ class GameEngine {
         this.particleSys = new ParticleSystem();
         this.particleSys.initRain(this.canvas.width, this.canvas.height);
         this.trajectory = new TrajectoryProjector();
+        this.lighting = new LightingEngine(this.viewWidth, this.viewHeight);
         this.editor = new LevelEditor(this.canvas, this.ctx);
 
         // Entities & Level Setup
@@ -409,6 +410,9 @@ class GameEngine {
             // Update Particles & Weather
             this.particleSys.update(this.viewWidth, this.viewHeight, wind);
             this.trajectory.update();
+            if (this.lighting) {
+                this.lighting.update(this.activeLevel.biome);
+            }
 
             // Camera Tracking
             const targetCamX = this.player.x - this.viewWidth * 0.35;
@@ -639,6 +643,11 @@ class GameEngine {
             ctx.font = 'bold 16px sans-serif';
             ctx.fillText(ft.text, ft.x - this.camera.x, ft.y - this.camera.y);
             ctx.restore();
+        }
+
+        // Dynamic Atmospheric Lighting Overlay
+        if (this.lighting) {
+            this.lighting.draw(ctx, this.camera, this.player);
         }
 
         ctx.restore();
